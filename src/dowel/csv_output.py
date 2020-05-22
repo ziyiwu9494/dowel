@@ -14,7 +14,7 @@ class CsvOutput(FileOutput):
     """
 
     def __init__(self, file_name):
-        super().__init__(file_name)
+        super().__init__(file_name, mode='r+')
         self._writer = None
         self._fieldnames = None
         self._warned_once = set()
@@ -42,19 +42,35 @@ class CsvOutput(FileOutput):
                 self._writer.writeheader()
 
             if to_csv.keys() != self._fieldnames:
-                self._warn('Inconsistent TabularInput keys detected. '
-                           'CsvOutput keys: {}. '
-                           'TabularInput keys: {}. '
-                           'Did you change key sets after your first '
-                           'logger.log(TabularInput)?'.format(
-                               set(self._fieldnames), set(to_csv.keys())))
-
-            self._writer.writerow(to_csv)
+                self._fieldnames |= to_csv.keys()
+                self.add_key()
+            else:
+                self._writer.writerow(to_csv)
 
             for k in to_csv.keys():
                 data.mark(k)
         else:
             raise ValueError('Unacceptable type.')
+
+    def add_key(self, to_csv):
+        """
+        add key or keys from to_csv if they are not present in current log
+        :param to_csv: data to be added to csv
+        """
+        rewrite_csv = list()
+        reader = csv.DictReader(self._log_file)
+        fieldnames = reader.fieldnames
+        for row in reader:
+            for key in to_csv.keys():
+                if key not in fieldnames:
+                    row[key] = ''
+            rewrite_csv.append(dict(row))
+        rewrite_csv.append(to_csv)
+        writer = csv.DictWriter(self._log_file, fieldnames=set(to_csv.keys()))
+        self._log_file.seek(0)
+        writer.writeheader()
+        writer.writerows(rewrite_csv)
+        self._log_file.truncate()
 
     def _warn(self, msg):
         """Warns the user using warnings.warn.
