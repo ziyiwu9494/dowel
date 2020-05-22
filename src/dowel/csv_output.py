@@ -43,7 +43,13 @@ class CsvOutput(FileOutput):
 
             if to_csv.keys() != self._fieldnames:
                 self._fieldnames |= to_csv.keys()
-                self.add_key()
+                if set(to_csv.keys()).issubset(self._fieldnames):
+                    for key in self._fieldnames:
+                        if key not in to_csv.keys():
+                            to_csv[key] = ''
+                    self._writer.writerow(to_csv)
+                else:
+                    self.add_key()
             else:
                 self._writer.writerow(to_csv)
 
