@@ -60,9 +60,6 @@ class FileOutput(LogOutput, metaclass=abc.ABCMeta):
         mkdir_p(os.path.dirname(file_name))
         # Open the log file in child class
         self._log_file = open(file_name, mode)
-        if mode != "w":
-            self._log_file.seek(0)
-            self._log_file.truncate()
 
     def close(self):
         """Close any files used by the output."""
