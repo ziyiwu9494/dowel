@@ -4,7 +4,6 @@ import tempfile
 import pytest
 
 from dowel import CsvOutput, TabularInput
-from dowel.csv_output import CsvOutputWarning
 
 
 class TestCsvOutput:
@@ -90,19 +89,6 @@ class TestCsvOutput:
     def test_unacceptable_type(self):
         with pytest.raises(ValueError):
             self.csv_output.record('foo')
-
-    def test_disable_warnings(self):
-        foo = 1
-        bar = 10
-        self.tabular.record('foo', foo)
-        self.csv_output.record(self.tabular)
-        self.tabular.record('foo', foo * 2)
-        self.tabular.record('bar', bar * 2)
-
-        self.csv_output.disable_warnings()
-
-        # this should not produce a warning, because we disabled warnings
-        self.csv_output.record(self.tabular)
 
     def assert_csv_matches(self, correct):
         """Check the first row of a csv file and compare it to known values."""

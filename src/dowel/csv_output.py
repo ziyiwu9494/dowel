@@ -38,17 +38,13 @@ class CsvOutput(FileOutput):
                 self._writer = csv.DictWriter(
                     self._log_file,
                     fieldnames=self._fieldnames,
+                    restval='',
                     extrasaction='ignore')
                 self._writer.writeheader()
 
             if to_csv.keys() != self._fieldnames:
                 self._fieldnames |= to_csv.keys()
-                if set(to_csv.keys()).issubset(self._fieldnames):
-                    for key in self._fieldnames:
-                        if key not in to_csv.keys():
-                            to_csv[key] = ''
-                    self._writer.writerow(to_csv)
-                else:
+                if not set(to_csv.keys()).issubset(self._fieldnames):
                     self.add_key()
             else:
                 self._writer.writerow(to_csv)
@@ -77,25 +73,3 @@ class CsvOutput(FileOutput):
         writer.writeheader()
         writer.writerows(rewrite_csv)
         self._log_file.truncate()
-
-    def _warn(self, msg):
-        """Warns the user using warnings.warn.
-
-        The stacklevel parameter needs to be 3 to ensure the call to logger.log
-        is the one printed.
-        """
-        if not self._disable_warnings and msg not in self._warned_once:
-            warnings.warn(
-                colorize(msg, 'yellow'), CsvOutputWarning, stacklevel=3)
-        self._warned_once.add(msg)
-        return msg
-
-    def disable_warnings(self):
-        """Disable logger warnings for testing."""
-        self._disable_warnings = True
-
-
-class CsvOutputWarning(UserWarning):
-    """Warning class for CsvOutput."""
-
-    pass
